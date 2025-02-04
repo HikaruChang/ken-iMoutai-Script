@@ -55,10 +55,10 @@ from Crypto.Util.Padding import pad
 from notify import send
 
 # 每周星期天 15:05 开始预约
-'''
+"""
 cron: 5 15 * * 0
 new Env("6_周末欢乐购")
-'''
+"""
 
 # 创建 StringIO 对象
 log_stream = io.StringIO()
@@ -70,7 +70,8 @@ logger.setLevel(logging.INFO)
 # 创建控制台 Handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
 
 # 创建 StringIO Handler
 stream_handler = logging.StreamHandler(log_stream)
@@ -91,7 +92,7 @@ all_shops_info = None
 DEBUG = False
 
 # 读取 KEN_IMAOTAI_ENV 环境变量
-KEN_IMAOTAI_ENV = os.getenv('KEN_IMAOTAI_ENV', '')
+KEN_IMAOTAI_ENV = os.getenv("KEN_IMAOTAI_ENV", "")
 
 # 加密 KEY
 ENCRYPT_KEY = "qbhajinldepmucsonaaaccgypwuvcjaa"
@@ -101,20 +102,31 @@ ENCRYPT_IV = "2018534749963515"
 # 解析 KEN_IMAOTAI_ENV 环境变量并保存到 user 列表
 users = []
 if KEN_IMAOTAI_ENV:
-    env_list = KEN_IMAOTAI_ENV.split('&')
+    env_list = KEN_IMAOTAI_ENV.split("&")
     for env in env_list:
         try:
             # 使用 re.split() 分割字符串，支持 '#' 和 '$'
-            split_values = re.split(r'[#$]', env)
+            split_values = re.split(r"[#$]", env)
 
-            PHONE_NUMBER, USER_ID, DEVICE_ID, MT_VERSION, PRODUCT_ID_LIST, SHOP_INFO, LAT, LNG, TOKEN, COOKIE = split_values
+            (
+                PHONE_NUMBER,
+                USER_ID,
+                DEVICE_ID,
+                MT_VERSION,
+                PRODUCT_ID_LIST,
+                SHOP_INFO,
+                LAT,
+                LNG,
+                TOKEN,
+                COOKIE,
+            ) = split_values
 
-            SHOP_MODE = ''
-            PROVINCE = ''
-            CITY = ''
+            SHOP_MODE = ""
+            PROVINCE = ""
+            CITY = ""
 
-            if '^' in SHOP_INFO:
-                parts = SHOP_INFO.split('^')
+            if "^" in SHOP_INFO:
+                parts = SHOP_INFO.split("^")
                 if len(parts) > 1:
                     # 检测 parts 长度是否为 4，否则抛出异常
                     if len(parts) != 4:
@@ -123,7 +135,7 @@ if KEN_IMAOTAI_ENV:
                         )
                     SHOP_ID, SHOP_MODE, PROVINCE, CITY = parts
                     # 检测 SHOP_MODE 是否为 NEAREST 或 INVENTORY
-                    if SHOP_MODE not in ['NEAREST', 'INVENTORY', '']:
+                    if SHOP_MODE not in ["NEAREST", "INVENTORY", ""]:
                         raise Exception(
                             "🚫 店铺缺货模式值错误，请检查 SHOP_MODE 值是否为 NEAREST（<默认> 距离最近） 或 INVENTORY（库存最多） 或 空字符串（不选择其他店铺）"
                         )
@@ -140,37 +152,47 @@ if KEN_IMAOTAI_ENV:
                 SHOP_ID = SHOP_INFO
 
             # 如果 SHOP_ID 为 AUTO，检查 SHOP_MODE 是否为空
-            if SHOP_ID == 'AUTO' and not SHOP_MODE:
+            if SHOP_ID == "AUTO" and not SHOP_MODE:
                 raise Exception(
                     "🚫 店铺缺货模式值错误，SHOP_ID 值为 AUTO 时，需设置 SHOP_MODE、PROVINCE 和 CITY 值 "
                 )
 
             user = {
-                'PHONE_NUMBER': PHONE_NUMBER.strip(),
-                'USER_ID': USER_ID.strip(),
-                'DEVICE_ID': DEVICE_ID.strip(),
-                'MT_VERSION': MT_VERSION.strip(),
-                'PRODUCT_ID_LIST': ast.literal_eval(PRODUCT_ID_LIST.strip()),
-                'SHOP_ID': SHOP_ID.strip(),
-                'SHOP_MODE': SHOP_MODE.strip(),
-                'PROVINCE': PROVINCE.strip(),
-                'CITY': CITY.strip(),
-                'LAT': LAT.strip(),
-                'LNG': LNG.strip(),
-                'TOKEN': TOKEN.strip(),
-                'COOKIE': COOKIE.strip()
+                "PHONE_NUMBER": PHONE_NUMBER.strip(),
+                "USER_ID": USER_ID.strip(),
+                "DEVICE_ID": DEVICE_ID.strip(),
+                "MT_VERSION": MT_VERSION.strip(),
+                "PRODUCT_ID_LIST": ast.literal_eval(PRODUCT_ID_LIST.strip()),
+                "SHOP_ID": SHOP_ID.strip(),
+                "SHOP_MODE": SHOP_MODE.strip(),
+                "PROVINCE": PROVINCE.strip(),
+                "CITY": CITY.strip(),
+                "LAT": LAT.strip(),
+                "LNG": LNG.strip(),
+                "TOKEN": TOKEN.strip(),
+                "COOKIE": COOKIE.strip(),
             }
             # 检查字段是否完整且有值，不检查 SHOP_MODE、PROVICE、CITY 字段（PROVICE 和 CITY 用于 SHOP_MODE 里，而 SHOP_MODE 可选）
             required_fields = [
-                'PHONE_NUMBER', 'USER_ID', 'DEVICE_ID', 'MT_VERSION',
-                'PRODUCT_ID_LIST', 'SHOP_ID', 'LAT', 'LNG', 'TOKEN', 'COOKIE'
+                "PHONE_NUMBER",
+                "USER_ID",
+                "DEVICE_ID",
+                "MT_VERSION",
+                "PRODUCT_ID_LIST",
+                "SHOP_ID",
+                "LAT",
+                "LNG",
+                "TOKEN",
+                "COOKIE",
             ]
             if all(user.get(field) for field in required_fields):
                 # 判断 PRODUCT_ID_LIST 长度是否大于 0
-                if len(user['PRODUCT_ID_LIST']) > 0:
+                if len(user["PRODUCT_ID_LIST"]) > 0:
                     users.append(user)
                 else:
-                    raise Exception("🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试")
+                    raise Exception(
+                        "🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试"
+                    )
             else:
                 logging.info(f"🚫 用户信息不完整: {user}")
         except Exception as e:
@@ -206,7 +228,7 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};"
+        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};",
     }
     if lat and lng:
         headers["MT-Lat"] = lat
@@ -216,75 +238,98 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
 
 # 加密
 def aes_cbc_encrypt(data, key, iv):
-    cipher = AES.new(key.encode('utf-8'), AES.MODE_CBC, iv.encode('utf-8'))
-    padded_data = pad(data.encode('utf-8'), AES.block_size)
+    cipher = AES.new(key.encode("utf-8"), AES.MODE_CBC, iv.encode("utf-8"))
+    padded_data = pad(data.encode("utf-8"), AES.block_size)
     encrypted_data = cipher.encrypt(padded_data)
-    return base64.b64encode(encrypted_data).decode('utf-8')
+    return base64.b64encode(encrypted_data).decode("utf-8")
 
 
 # 预约商品
-def reserve_product(itemId, shopId, sessionId, userId, token, deviceId,
-                    mtVersion, lat, lng, shop_mode, province, city):
+def reserve_product(
+    itemId,
+    shopId,
+    sessionId,
+    userId,
+    token,
+    deviceId,
+    mtVersion,
+    lat,
+    lng,
+    shop_mode,
+    province,
+    city,
+):
     if shop_mode is None:
         logger.info(f"⚡ 重新预约：店铺 ID：{shopId}, 商品 ID：{itemId}")
 
-    mt_k = f'{int(time.time() * 1000)}'
+    mt_k = f"{int(time.time() * 1000)}"
     headers = {
-        'User-Agent': 'iOS;16.3;Apple;?unrecognized?',
-        'MT-Token': token,
-        'MT-Network-Type': 'WIFI',
-        'MT-User-Tag': '0',
-        'MT-K': mt_k,
-        'MT-Info': '028e7f96f6369cafe1d105579c5b9377',
-        'MT-APP-Version': mtVersion,
-        'Accept-Language': 'zh-Hans-CN;q=1',
-        'MT-Device-ID': deviceId,
-        'MT-Bundle-ID': 'com.moutai.mall',
-        'MT-Lng': lng,
-        'MT-Lat': lat,
-        'Content-Type': 'application/json',
-        'userId': str(userId)
+        "User-Agent": "iOS;16.3;Apple;?unrecognized?",
+        "MT-Token": token,
+        "MT-Network-Type": "WIFI",
+        "MT-User-Tag": "0",
+        "MT-K": mt_k,
+        "MT-Info": "028e7f96f6369cafe1d105579c5b9377",
+        "MT-APP-Version": mtVersion,
+        "Accept-Language": "zh-Hans-CN;q=1",
+        "MT-Device-ID": deviceId,
+        "MT-Bundle-ID": "com.moutai.mall",
+        "MT-Lng": lng,
+        "MT-Lat": lat,
+        "Content-Type": "application/json",
+        "userId": str(userId),
     }
     requestBody = {
-        "itemInfoList": [{
-            "count": 1,
-            "itemId": str(itemId)
-        }],
+        "itemInfoList": [{"count": 1, "itemId": str(itemId)}],
         "sessionId": sessionId,
         "userId": str(userId),
-        "shopId": str(shopId)
+        "shopId": str(shopId),
     }
-    actParam = aes_cbc_encrypt(json.dumps(requestBody), ENCRYPT_KEY,
-                               ENCRYPT_IV)
-    requestBody['actParam'] = actParam
+    actParam = aes_cbc_encrypt(json.dumps(requestBody), ENCRYPT_KEY, ENCRYPT_IV)
+    requestBody["actParam"] = actParam
     response = requests.post(
-        'https://app.moutai519.com.cn/xhr/front/mall/reservation/add',
+        "https://app.moutai519.com.cn/xhr/front/mall/reservation/add",
         headers=headers,
-        json=requestBody)
-    code = response.json().get('code', 0)
+        json=requestBody,
+    )
+    code = response.json().get("code", 0)
     if code == 2000:
-        result = response.json().get('data', {}).get('successDesc', "未知")
+        result = response.json().get("data", {}).get("successDesc", "未知")
         logging.info(f"🛒 商品ID {itemId} ✅ 预约成功: {result}")
         return result
     else:
         message = response.json().get("message", "未知原因")
-        error_msg = f'🚫 预约失败: 错误码 {code}, 错误信息: {message}'
+        error_msg = f"🚫 预约失败: 错误码 {code}, 错误信息: {message}"
         logging.error(f"🛒 商品ID {itemId} {error_msg}")
         # 如果 message 包含 "请选择另外的门店申购"，则根据店铺缺货模式获取可预约的店铺 ID
         if "请选择另外的门店申购" in message:
             if shop_mode:
                 try:
-                    logging.info(f"--- 🏁 根据店铺缺货模式 {shop_mode} 获取可预约的店铺 ID")
-                    shop_id_new = get_shop_id_by_mode(lat, lng, shop_mode,
-                                                      province, city, itemId)
+                    logging.info(
+                        f"--- 🏁 根据店铺缺货模式 {shop_mode} 获取可预约的店铺 ID"
+                    )
+                    shop_id_new = get_shop_id_by_mode(
+                        lat, lng, shop_mode, province, city, itemId
+                    )
                     if shop_id_new:
                         logging.info(
                             f"--- 🏁 获取可预约的店铺 ID 成功，店铺 ID: {shop_id_new}，重新预约商品"
                         )
                         # 这里特地传 None，在尝试自动预约其他店铺失败时，不再递归调用
-                        reserve_product(itemId, shop_id_new, sessionId, userId,
-                                        token, deviceId, mtVersion, lat, lng,
-                                        None, None, None)
+                        reserve_product(
+                            itemId,
+                            shop_id_new,
+                            sessionId,
+                            userId,
+                            token,
+                            deviceId,
+                            mtVersion,
+                            lat,
+                            lng,
+                            None,
+                            None,
+                            None,
+                        )
                     else:
                         logging.info(
                             f"--- 🚫 获取可预约的店铺 ID 失败，请检查店铺缺货模式 SHOP_ID^SHOP_MODE^PROVINCE^CITY 值 是否正确"
@@ -313,10 +358,10 @@ def get_session_id_items():
 
     # 解析响应
     sessionId = data["data"]["sessionId"]
-    itemList = [{
-        "itemCode": item["itemCode"],
-        "title": item["title"]
-    } for item in data["data"]["itemList"]]
+    itemList = [
+        {"itemCode": item["itemCode"], "title": item["title"]}
+        for item in data["data"]["itemList"]
+    ]
     return {"sessionId": sessionId, "itemList": itemList}
 
 
@@ -327,7 +372,7 @@ def start(user, items_list):
     # 筛选周末欢乐购可预约的商品和日常预约的商品重合的商品ID列表
     weekend_product_id_list = []
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info(f"🧾 用户：{user['PHONE_NUMBER']}，开始预约商品")
 
     # 筛选重合的商品 ID
@@ -336,36 +381,47 @@ def start(user, items_list):
             weekend_product_id_list.append(item["itemCode"])
 
     if not weekend_product_id_list:
-        logging.info(f"🚫 用户：{user['PHONE_NUMBER']}，找不到与日常预约重合的商品 ID，将不执行欢乐购！")
+        logging.info(
+            f"🚫 用户：{user['PHONE_NUMBER']}，找不到与日常预约重合的商品 ID，将不执行欢乐购！"
+        )
         return
     else:
         logging.info(f"⚡ 筛选与日常预约重合的商品 ID：{weekend_product_id_list}")
 
     if user["SHOP_ID"] == "AUTO":
-        logging.info(f"🏁 店铺 ID 为 AUTO，根据店铺模式 {user['SHOP_MODE']} 获取店铺 ID")
+        logging.info(
+            f"🏁 店铺 ID 为 AUTO，根据店铺模式 {user['SHOP_MODE']} 获取店铺 ID"
+        )
 
     for product_id in weekend_product_id_list:
         shop_id = user["SHOP_ID"]
 
         # 判断 SHOP_ID 是否为 AUTO，如果是，则根据 SHOP_MODE 获取店铺 ID
         if user["SHOP_ID"] == "AUTO":
-            shop_id = get_shop_id_by_mode(user["LAT"], user["LNG"],
-                                          user["SHOP_MODE"], user["PROVINCE"],
-                                          user["CITY"], product_id)
+            shop_id = get_shop_id_by_mode(
+                user["LAT"],
+                user["LNG"],
+                user["SHOP_MODE"],
+                user["PROVINCE"],
+                user["CITY"],
+                product_id,
+            )
             logging.info(f"🚩 商品ID：{product_id}，获取店铺 ID（{shop_id}）成功")
 
-        reserve_product(itemId=product_id,
-                        shopId=shop_id,
-                        sessionId=session_id,
-                        userId=user["USER_ID"],
-                        token=user["TOKEN"],
-                        deviceId=user["DEVICE_ID"],
-                        mtVersion=user["MT_VERSION"],
-                        lat=user["LAT"],
-                        lng=user["LNG"],
-                        shop_mode=user["SHOP_MODE"],
-                        province=user["PROVINCE"],
-                        city=user["CITY"])
+        reserve_product(
+            itemId=product_id,
+            shopId=shop_id,
+            sessionId=session_id,
+            userId=user["USER_ID"],
+            token=user["TOKEN"],
+            deviceId=user["DEVICE_ID"],
+            mtVersion=user["MT_VERSION"],
+            lat=user["LAT"],
+            lng=user["LNG"],
+            shop_mode=user["SHOP_MODE"],
+            province=user["PROVINCE"],
+            city=user["CITY"],
+        )
 
     logging.info("🎁 所有商品预约完成")
 
@@ -389,14 +445,18 @@ def get_shop_info(province_name, city_name):
     # 第三步：根据provinceName和cityName过滤数据
     result = []
     for _, shop_info in shops_data.items():
-        if shop_info["provinceName"] == province_name and shop_info[
-                "cityName"] == city_name:
-            result.append({
-                "lat": shop_info["lat"],
-                "lng": shop_info["lng"],
-                "name": shop_info["name"],
-                "shopId": shop_info["shopId"]
-            })
+        if (
+            shop_info["provinceName"] == province_name
+            and shop_info["cityName"] == city_name
+        ):
+            result.append(
+                {
+                    "lat": shop_info["lat"],
+                    "lng": shop_info["lng"],
+                    "name": shop_info["name"],
+                    "shopId": shop_info["shopId"],
+                }
+            )
 
     return result
 
@@ -418,10 +478,9 @@ def get_shop_by_product_id(province_name, product_id):
     for shop in data["data"]["shops"]:
         for item in shop["items"]:
             if item["itemId"] == product_id:
-                result.append({
-                    "shopId": shop["shopId"],
-                    "inventory": item["inventory"]
-                })
+                result.append(
+                    {"shopId": shop["shopId"], "inventory": item["inventory"]}
+                )
     return result
 
 
@@ -433,8 +492,10 @@ def haversine(lat1, lng1, lat2, lng2):
     # Haversine 公式
     dlat = lat2 - lat1
     dlng = lng2 - lng1
-    a = math.sin(
-        dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2)**2
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+    )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     # 地球半径（公里）
@@ -445,10 +506,16 @@ def haversine(lat1, lng1, lat2, lng2):
 
 
 # 根据 SHOP_MODE 获取店铺ID
-def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
-                        product_id):
+def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name, product_id):
     # 判断入参是否为空
-    if not lat or not lng or not shop_mode or not province_name or not city_name or not product_id:
+    if (
+        not lat
+        or not lng
+        or not shop_mode
+        or not province_name
+        or not city_name
+        or not product_id
+    ):
         logging.warning("🚫 缺货模式 - 获取店铺ID失败，请检查入参")
         return ""
 
@@ -460,7 +527,9 @@ def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
 
     # 不同的商品 ID 获取到的数量不同，需要重新获取
     shops_by_product_id = get_shop_by_product_id(province_name, product_id)
-    debug_log(f"--- 🏁 获取本省份（{province_name}）指定商品（{product_id}）可以预约的店铺信息 成功")
+    debug_log(
+        f"--- 🏁 获取本省份（{province_name}）指定商品（{product_id}）可以预约的店铺信息 成功"
+    )
 
     # 筛选 省份内所有能预约的店铺 在 用户选的城市店铺 中有哪些
     filter_shops = []
@@ -479,8 +548,9 @@ def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
         debug_log("--- 🏁 店铺缺货模式：NEAREST（距离最近）")
         # 计算用户位置到店铺的距离，并且按照距离近到远排序，把距离添加到 filter_shops 中
         for shop in filter_shops:
-            distance = haversine(float(lat), float(lng), float(shop["lat"]),
-                                 float(shop["lng"]))
+            distance = haversine(
+                float(lat), float(lng), float(shop["lat"]), float(shop["lng"])
+            )
             shop["distance"] = distance
         filter_shops.sort(key=lambda x: x["distance"])
         if DEBUG:
@@ -518,8 +588,7 @@ if __name__ == "__main__":
             exit()
 
     # 生成时间戳
-    timestamp_today = str(
-        int(time.mktime(datetime.date.today().timetuple())) * 1000)
+    timestamp_today = str(int(time.mktime(datetime.date.today().timetuple())) * 1000)
 
     result = get_session_id_items()
     session_id = result["sessionId"]
@@ -528,13 +597,15 @@ if __name__ == "__main__":
     for item in items_list:
         items_list_str += f"商品({item['itemCode']})-{item['title']}、"
 
-    logging.info('--------------------------')
-    logging.info(f"💬 当前 session：{session_id}。本场次可预约商品列表：{items_list_str}")
+    logging.info("--------------------------")
+    logging.info(
+        f"💬 当前 session：{session_id}。本场次可预约商品列表：{items_list_str}"
+    )
 
     for user in users:
         start(user, items_list)
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info(" ✅ 所有用户预约完成")
 
     log_contents = log_stream.getvalue()

@@ -2,6 +2,7 @@ import logging
 import requests
 import time
 import datetime
+
 """
 3、查询可预约的商品 和 售卖商店，获取 SHOP_ID、LAT、LNG 等数据
 
@@ -21,13 +22,14 @@ CITY_NAME = "南宁市"
 # --------------------
 
 # ***** 以下内容不用动 *****
-'''
+"""
 cron: 1 1 1 1 *
 new Env("3_查询商品商店信息")
-'''
+"""
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 # 获取可预约的商品信息
@@ -47,10 +49,16 @@ def get_item_info():
     sessionId = data["data"]["sessionId"]
     # 提取itemCode和title
     item_list = data["data"]["itemList"]
-    result = [{
-        "itemCode": item["itemCode"],
-        "title": item.get("title", f"未知商品，可结合该商品图片链接来判断：{item.get('pictureV2', '无图片信息')}，同时到 APP 核实。")
-    } for item in item_list]
+    result = [
+        {
+            "itemCode": item["itemCode"],
+            "title": item.get(
+                "title",
+                f"未知商品，可结合该商品图片链接来判断：{item.get('pictureV2', '无图片信息')}，同时到 APP 核实。",
+            ),
+        }
+        for item in item_list
+    ]
 
     return {"sessionId": sessionId, "itemList": result}
 
@@ -74,17 +82,21 @@ def get_shop_info(province_name, city_name):
     # 第三步：根据provinceName和cityName过滤数据
     result = []
     for _, shop_info in shops_data.items():
-        if shop_info["provinceName"] == province_name and shop_info[
-                "cityName"] == city_name:
-            result.append({
-                "lat": shop_info["lat"],
-                "lng": shop_info["lng"],
-                "name": shop_info["name"],
-                "shopId": shop_info["shopId"],
-                "fullAddress": shop_info["fullAddress"],
-                "cityName": shop_info["cityName"],
-                "provinceName": shop_info["provinceName"]
-            })
+        if (
+            shop_info["provinceName"] == province_name
+            and shop_info["cityName"] == city_name
+        ):
+            result.append(
+                {
+                    "lat": shop_info["lat"],
+                    "lng": shop_info["lng"],
+                    "name": shop_info["name"],
+                    "shopId": shop_info["shopId"],
+                    "fullAddress": shop_info["fullAddress"],
+                    "cityName": shop_info["cityName"],
+                    "provinceName": shop_info["provinceName"],
+                }
+            )
 
     return result
 
@@ -118,10 +130,12 @@ if __name__ == "__main__":
         logging.error(f"获取商品信息失败：{str(e)}")
         raise
     logging.info(
-        f"获取到 SessionId(可以理解为申购活动批次，每天都会变化，一般+1): {result['sessionId']}")
-    for item in result['itemList']:
+        f"获取到 SessionId(可以理解为申购活动批次，每天都会变化，一般+1): {result['sessionId']}"
+    )
+    for item in result["itemList"]:
         logging.info(
-            f"获取到可预约商品：itemCode: {item['itemCode']}, title: {item['title']}")
+            f"获取到可预约商品：itemCode: {item['itemCode']}, title: {item['title']}"
+        )
 
     logging.info("****************************")
     logging.info("记录以下信息用于后续预约：")
@@ -129,8 +143,12 @@ if __name__ == "__main__":
     logging.info(f"省份 - PROVINCE：{PROVINCE_NAME}")
     logging.info(f"城市 - CITY：{CITY_NAME}")
     logging.info(f"店铺ID - SHOP_ID")
-    logging.info(f"纬度 - LAT，可直接用店铺对应的纬度值 或者 自己实际的纬度值（自行想办法获取）")
-    logging.info(f"经度 - LNG，可直接用店铺对应的经度值 或者 自己实际的经度值（自行想办法获取）")
+    logging.info(
+        f"纬度 - LAT，可直接用店铺对应的纬度值 或者 自己实际的纬度值（自行想办法获取）"
+    )
+    logging.info(
+        f"经度 - LNG，可直接用店铺对应的经度值 或者 自己实际的经度值（自行想办法获取）"
+    )
     logging.info(
         f"需要预约的商品 ID 列表 - PRODUCT_ID_LIST（对应 itemCode），符号都是用英文符号，例如：['10941', '10923', '2478', '10942']"
     )

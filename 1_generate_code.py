@@ -5,6 +5,7 @@ import requests
 import logging
 import json
 import re
+
 """
 1、获取登录验证码，获取 DEVICE_ID、MT_VERSION 等数据
 """
@@ -20,15 +21,16 @@ PHONE_NUMBER = ""
 # 若是想要保留之前的设备 ID，可以在这里填写之前的值，则不会生成新的设备 ID。
 DEVICE_ID_DEFAULT = ""
 # --------------------
-'''
+"""
 cron: 1 1 1 1 *
 new Env("1_获取登录验证码")
-'''
+"""
 
 # ***** 以下内容不用动 *****
 
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 SALT = "2af72f100c356273d46284f6fd1dfc08"
 
@@ -50,13 +52,13 @@ def send_code(mobile, device_id, mt_version):
     data = {
         "mobile": mobile,
         "md5": signature(mobile, cur_time),
-        "timestamp": str(cur_time)
+        "timestamp": str(cur_time),
     }
     headers = {
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     url = "https://app.moutai519.com.cn/xhr/front/user/register/vcode"
     response = requests.post(url, headers=headers, data=json.dumps(data))
@@ -73,7 +75,7 @@ def send_code(mobile, device_id, mt_version):
 def get_mt_version():
     url = "https://apps.apple.com/cn/app/i%E8%8C%85%E5%8F%B0/id1600482450"
     with requests.get(url) as response:
-        response.encoding = 'utf-8'  # 确保使用正确的编码
+        response.encoding = "utf-8"  # 确保使用正确的编码
         html_content = response.text
 
     # 使用正则表达式匹配版本号
@@ -81,7 +83,7 @@ def get_mt_version():
     match = pattern.search(html_content)
 
     if match:
-        mt_version = match.group(1).strip().replace('版本 ', '')  # 去掉前后的空白字符
+        mt_version = match.group(1).strip().replace("版本 ", "")  # 去掉前后的空白字符
         return mt_version
 
     raise Exception("获取版本号失败")

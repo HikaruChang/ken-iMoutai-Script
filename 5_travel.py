@@ -49,10 +49,10 @@ from notify import send
 # 每日 9:12 执行，可自行修改。旅行一个周期 30 天，最多获取 30 小茅运，每次旅行基本可获 1 ~ 3 个小茅运，所以一天一次旅行足矣。
 # 如需每日旅行多次，示例 12 9-20/4 * * *  ， 表示 9:12 到 20:12 期间每隔 4 小时执行一次，包括 9:12 和 20:12。
 # 比如 12 9,20 * * * 表示 9:12、20:12 执行。
-'''
+"""
 cron: 12 9 * * *
 new Env("5_旅行相关")
-'''
+"""
 
 # 创建 StringIO 对象
 log_stream = io.StringIO()
@@ -64,7 +64,8 @@ logger.setLevel(logging.INFO)
 # 创建控制台 Handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
 
 # 创建 StringIO Handler
 stream_handler = logging.StreamHandler(log_stream)
@@ -75,42 +76,63 @@ logger.addHandler(console_handler)
 logger.addHandler(stream_handler)
 
 # 读取 KEN_IMAOTAI_ENV 环境变量
-KEN_IMAOTAI_ENV = os.getenv('KEN_IMAOTAI_ENV', '')
+KEN_IMAOTAI_ENV = os.getenv("KEN_IMAOTAI_ENV", "")
 
 # 解析 KEN_IMAOTAI_ENV 环境变量并保存到 user 列表
 users = []
 if KEN_IMAOTAI_ENV:
-    env_list = KEN_IMAOTAI_ENV.split('&')
+    env_list = KEN_IMAOTAI_ENV.split("&")
     for env in env_list:
         try:
             # 使用 re.split() 分割字符串，支持 '#' 和 '$'
-            split_values = re.split(r'[#$]', env)
+            split_values = re.split(r"[#$]", env)
 
-            PHONE_NUMBER, USER_ID, DEVICE_ID, MT_VERSION, PRODUCT_ID_LIST, SHOP_ID, LAT, LNG, TOKEN, COOKIE = split_values
+            (
+                PHONE_NUMBER,
+                USER_ID,
+                DEVICE_ID,
+                MT_VERSION,
+                PRODUCT_ID_LIST,
+                SHOP_ID,
+                LAT,
+                LNG,
+                TOKEN,
+                COOKIE,
+            ) = split_values
 
             user = {
-                'PHONE_NUMBER': PHONE_NUMBER.strip(),
-                'USER_ID': USER_ID.strip(),
-                'DEVICE_ID': DEVICE_ID.strip(),
-                'MT_VERSION': MT_VERSION.strip(),
-                'PRODUCT_ID_LIST': ast.literal_eval(PRODUCT_ID_LIST.strip()),
-                'SHOP_ID': SHOP_ID.strip(),
-                'LAT': LAT.strip(),
-                'LNG': LNG.strip(),
-                'TOKEN': TOKEN.strip(),
-                'COOKIE': COOKIE.strip()
+                "PHONE_NUMBER": PHONE_NUMBER.strip(),
+                "USER_ID": USER_ID.strip(),
+                "DEVICE_ID": DEVICE_ID.strip(),
+                "MT_VERSION": MT_VERSION.strip(),
+                "PRODUCT_ID_LIST": ast.literal_eval(PRODUCT_ID_LIST.strip()),
+                "SHOP_ID": SHOP_ID.strip(),
+                "LAT": LAT.strip(),
+                "LNG": LNG.strip(),
+                "TOKEN": TOKEN.strip(),
+                "COOKIE": COOKIE.strip(),
             }
             # 检查字段是否完整且有值
             required_fields = [
-                'PHONE_NUMBER', 'USER_ID', 'DEVICE_ID', 'MT_VERSION',
-                'PRODUCT_ID_LIST', 'SHOP_ID', 'LAT', 'LNG', 'TOKEN', 'COOKIE'
+                "PHONE_NUMBER",
+                "USER_ID",
+                "DEVICE_ID",
+                "MT_VERSION",
+                "PRODUCT_ID_LIST",
+                "SHOP_ID",
+                "LAT",
+                "LNG",
+                "TOKEN",
+                "COOKIE",
             ]
             if all(user.get(field) for field in required_fields):
                 # 判断 PRODUCT_ID_LIST 长度是否大于 0
-                if len(user['PRODUCT_ID_LIST']) > 0:
+                if len(user["PRODUCT_ID_LIST"]) > 0:
                     users.append(user)
                 else:
-                    raise Exception("🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试")
+                    raise Exception(
+                        "🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试"
+                    )
             else:
                 logging.info(f"🚫 用户信息不完整: {user}")
         except Exception as e:
@@ -133,7 +155,7 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};"
+        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};",
     }
     if lat and lng:
         headers["MT-Lat"] = lat
@@ -168,15 +190,17 @@ def travel_reward(device_id, mt_version, cookie, lat, lng):
 
     # 本月剩余旅行奖励
     current_period_can_convert_xmy_num = get_exchange_rate_info(
-        device_id, mt_version, cookie)
+        device_id, mt_version, cookie
+    )
     if current_period_can_convert_xmy_num <= 0:
         raise Exception("🚫 当月无可领取奖励，直接结束旅行。")
     logging.info(f"📈当月可领取小茅运数量：{current_period_can_convert_xmy_num}")
 
     # 进行中
     if status == 2:
-        formatted_date = datetime.fromtimestamp(
-            end_time / 1000).strftime("%Y-%m-%d %H:%M:%S")
+        formatted_date = datetime.fromtimestamp(end_time / 1000).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
         raise Exception(f"🚫 旅行暂未结束,本次旅行结束时间:{formatted_date}")
     # 已完成
     if status == 3:
@@ -185,16 +209,14 @@ def travel_reward(device_id, mt_version, cookie, lat, lng):
 
         try:
             # 领取旅行获取的小茅运
-            reward_result = receive_reward(device_id, lat, lng, cookie,
-                                           mt_version)
+            reward_result = receive_reward(device_id, lat, lng, cookie, mt_version)
             logging.info(f"🎁 领取小茅运结果：{reward_result}")
         except Exception as e:
             logging.error(f"🚫 领取小茅运失败: {e}")
 
         try:
             # 首次分享获取耐力
-            share_result = share_reward(device_id, lat, lng, cookie,
-                                        mt_version)
+            share_result = share_reward(device_id, lat, lng, cookie, mt_version)
             # 如果分享成功，则耐力值加 10，用于后续判断是否足够耐力值旅行
             energy += 10
             logging.info(f"🎁 分享奖励结果：{share_result}")
@@ -262,8 +284,9 @@ def start_travel(device_id, mt_version, cookie):
     if body.get("code") != 2000:
         raise Exception(f"🚫 开始旅行失败：{body.get('message')}")
     start_travel_timestamp = body.get("data").get("startTravelTs", 0)
-    start_travel_str = datetime.fromtimestamp(
-        start_travel_timestamp / 1000).strftime("%Y-%m-%d %H:%M:%S")
+    start_travel_str = datetime.fromtimestamp(start_travel_timestamp / 1000).strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
     logging.info(f"✅ 开始旅行成功，旅行开始时间：{start_travel_str}")
 
 
@@ -314,7 +337,7 @@ def get_user_isolation_page_data(device_id, mt_version, cookie):
         "xmy": xmy,
         "energy_reward_value": energy_value,
         "energy": energy,
-        "end_time": end_time
+        "end_time": end_time,
     }
     return result
 
@@ -346,20 +369,25 @@ def get_exchange_rate_info(device_id, mt_version, cookie):
 
 if __name__ == "__main__":
     for user in users:
-        logging.info('--------------------------')
+        logging.info("--------------------------")
         logging.info(f"🧾 用户：{user['PHONE_NUMBER']}，执行旅行")
         try:
-            travel_reward(user['DEVICE_ID'], user['MT_VERSION'],
-                          user['COOKIE'], user['LAT'], user['LNG'])
+            travel_reward(
+                user["DEVICE_ID"],
+                user["MT_VERSION"],
+                user["COOKIE"],
+                user["LAT"],
+                user["LNG"],
+            )
         except Exception as e:
             logging.error(f"🚫 旅行失败: {e}")
         finally:
-            page_data = get_user_isolation_page_data(user['DEVICE_ID'],
-                                                     user['MT_VERSION'],
-                                                     user['COOKIE'])
+            page_data = get_user_isolation_page_data(
+                user["DEVICE_ID"], user["MT_VERSION"], user["COOKIE"]
+            )
             logging.info(f"【旅行后】用户数据：")
             log_travel_status(page_data)
-        logging.info('--------------------------')
+        logging.info("--------------------------")
 
     logging.info("✅ 所有用户旅行完成")
 

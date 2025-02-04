@@ -51,10 +51,10 @@ from Crypto.Util.Padding import pad
 from notify import send
 
 # 每日 9:10 开始预约
-'''
+"""
 cron: 10 9 * * *
 new Env("4_预约申购")
-'''
+"""
 
 # 创建 StringIO 对象
 log_stream = io.StringIO()
@@ -66,7 +66,8 @@ logger.setLevel(logging.INFO)
 # 创建控制台 Handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
 
 # 创建 StringIO Handler
 stream_handler = logging.StreamHandler(log_stream)
@@ -87,7 +88,7 @@ all_shops_info = None
 DEBUG = False
 
 # 读取 KEN_IMAOTAI_ENV 环境变量
-KEN_IMAOTAI_ENV = os.getenv('KEN_IMAOTAI_ENV', '')
+KEN_IMAOTAI_ENV = os.getenv("KEN_IMAOTAI_ENV", "")
 
 # 加密 KEY
 ENCRYPT_KEY = "qbhajinldepmucsonaaaccgypwuvcjaa"
@@ -97,20 +98,31 @@ ENCRYPT_IV = "2018534749963515"
 # 解析 KEN_IMAOTAI_ENV 环境变量并保存到 user 列表
 users = []
 if KEN_IMAOTAI_ENV:
-    env_list = KEN_IMAOTAI_ENV.split('&')
+    env_list = KEN_IMAOTAI_ENV.split("&")
     for env in env_list:
         try:
             # 使用 re.split() 分割字符串，支持 '#' 和 '$'
-            split_values = re.split(r'[#$]', env)
+            split_values = re.split(r"[#$]", env)
 
-            PHONE_NUMBER, USER_ID, DEVICE_ID, MT_VERSION, PRODUCT_ID_LIST, SHOP_INFO, LAT, LNG, TOKEN, COOKIE = split_values
+            (
+                PHONE_NUMBER,
+                USER_ID,
+                DEVICE_ID,
+                MT_VERSION,
+                PRODUCT_ID_LIST,
+                SHOP_INFO,
+                LAT,
+                LNG,
+                TOKEN,
+                COOKIE,
+            ) = split_values
 
-            SHOP_MODE = ''
-            PROVINCE = ''
-            CITY = ''
+            SHOP_MODE = ""
+            PROVINCE = ""
+            CITY = ""
 
-            if '^' in SHOP_INFO:
-                parts = SHOP_INFO.split('^')
+            if "^" in SHOP_INFO:
+                parts = SHOP_INFO.split("^")
                 if len(parts) > 1:
                     # 检测 parts 长度是否为 4，否则抛出异常
                     if len(parts) != 4:
@@ -119,7 +131,7 @@ if KEN_IMAOTAI_ENV:
                         )
                     SHOP_ID, SHOP_MODE, PROVINCE, CITY = parts
                     # 检测 SHOP_MODE 是否为 NEAREST 或 INVENTORY
-                    if SHOP_MODE not in ['NEAREST', 'INVENTORY', '']:
+                    if SHOP_MODE not in ["NEAREST", "INVENTORY", ""]:
                         raise Exception(
                             "🚫 店铺缺货模式值错误，请检查 SHOP_MODE 值是否为 NEAREST（<默认> 距离最近） 或 INVENTORY（库存最多） 或 空字符串（不选择其他店铺）"
                         )
@@ -136,37 +148,47 @@ if KEN_IMAOTAI_ENV:
                 SHOP_ID = SHOP_INFO
 
             # 如果 SHOP_ID 为 AUTO，检查 SHOP_MODE 是否为空
-            if SHOP_ID == 'AUTO' and not SHOP_MODE:
+            if SHOP_ID == "AUTO" and not SHOP_MODE:
                 raise Exception(
                     "🚫 店铺缺货模式值错误，SHOP_ID 值为 AUTO 时，需设置 SHOP_MODE、PROVINCE 和 CITY 值 "
                 )
 
             user = {
-                'PHONE_NUMBER': PHONE_NUMBER.strip(),
-                'USER_ID': USER_ID.strip(),
-                'DEVICE_ID': DEVICE_ID.strip(),
-                'MT_VERSION': MT_VERSION.strip(),
-                'PRODUCT_ID_LIST': ast.literal_eval(PRODUCT_ID_LIST.strip()),
-                'SHOP_ID': SHOP_ID.strip(),
-                'SHOP_MODE': SHOP_MODE.strip(),
-                'PROVINCE': PROVINCE.strip(),
-                'CITY': CITY.strip(),
-                'LAT': LAT.strip(),
-                'LNG': LNG.strip(),
-                'TOKEN': TOKEN.strip(),
-                'COOKIE': COOKIE.strip()
+                "PHONE_NUMBER": PHONE_NUMBER.strip(),
+                "USER_ID": USER_ID.strip(),
+                "DEVICE_ID": DEVICE_ID.strip(),
+                "MT_VERSION": MT_VERSION.strip(),
+                "PRODUCT_ID_LIST": ast.literal_eval(PRODUCT_ID_LIST.strip()),
+                "SHOP_ID": SHOP_ID.strip(),
+                "SHOP_MODE": SHOP_MODE.strip(),
+                "PROVINCE": PROVINCE.strip(),
+                "CITY": CITY.strip(),
+                "LAT": LAT.strip(),
+                "LNG": LNG.strip(),
+                "TOKEN": TOKEN.strip(),
+                "COOKIE": COOKIE.strip(),
             }
             # 检查字段是否完整且有值，不检查 SHOP_MODE、PROVICE、CITY 字段（PROVICE 和 CITY 用于 SHOP_MODE 里，而 SHOP_MODE 可选）
             required_fields = [
-                'PHONE_NUMBER', 'USER_ID', 'DEVICE_ID', 'MT_VERSION',
-                'PRODUCT_ID_LIST', 'SHOP_ID', 'LAT', 'LNG', 'TOKEN', 'COOKIE'
+                "PHONE_NUMBER",
+                "USER_ID",
+                "DEVICE_ID",
+                "MT_VERSION",
+                "PRODUCT_ID_LIST",
+                "SHOP_ID",
+                "LAT",
+                "LNG",
+                "TOKEN",
+                "COOKIE",
             ]
             if all(user.get(field) for field in required_fields):
                 # 判断 PRODUCT_ID_LIST 长度是否大于 0
-                if len(user['PRODUCT_ID_LIST']) > 0:
+                if len(user["PRODUCT_ID_LIST"]) > 0:
                     users.append(user)
                 else:
-                    raise Exception("🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试")
+                    raise Exception(
+                        "🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试"
+                    )
             else:
                 logging.info(f"🚫 用户信息不完整: {user}")
         except Exception as e:
@@ -202,7 +224,7 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};"
+        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};",
     }
     if lat and lng:
         headers["MT-Lat"] = lat
@@ -212,75 +234,98 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
 
 # 加密
 def aes_cbc_encrypt(data, key, iv):
-    cipher = AES.new(key.encode('utf-8'), AES.MODE_CBC, iv.encode('utf-8'))
-    padded_data = pad(data.encode('utf-8'), AES.block_size)
+    cipher = AES.new(key.encode("utf-8"), AES.MODE_CBC, iv.encode("utf-8"))
+    padded_data = pad(data.encode("utf-8"), AES.block_size)
     encrypted_data = cipher.encrypt(padded_data)
-    return base64.b64encode(encrypted_data).decode('utf-8')
+    return base64.b64encode(encrypted_data).decode("utf-8")
 
 
 # 预约商品
-def reserve_product(itemId, shopId, sessionId, userId, token, deviceId,
-                    mtVersion, lat, lng, shop_mode, province, city):
+def reserve_product(
+    itemId,
+    shopId,
+    sessionId,
+    userId,
+    token,
+    deviceId,
+    mtVersion,
+    lat,
+    lng,
+    shop_mode,
+    province,
+    city,
+):
     if shop_mode is None:
         logger.info(f"⚡ 重新预约：店铺 ID：{shopId}, 商品 ID：{itemId}")
 
-    mt_k = f'{int(time.time() * 1000)}'
+    mt_k = f"{int(time.time() * 1000)}"
     headers = {
-        'User-Agent': 'iOS;16.3;Apple;?unrecognized?',
-        'MT-Token': token,
-        'MT-Network-Type': 'WIFI',
-        'MT-User-Tag': '0',
-        'MT-K': mt_k,
-        'MT-Info': '028e7f96f6369cafe1d105579c5b9377',
-        'MT-APP-Version': mtVersion,
-        'Accept-Language': 'zh-Hans-CN;q=1',
-        'MT-Device-ID': deviceId,
-        'MT-Bundle-ID': 'com.moutai.mall',
-        'MT-Lng': lng,
-        'MT-Lat': lat,
-        'Content-Type': 'application/json',
-        'userId': str(userId)
+        "User-Agent": "iOS;16.3;Apple;?unrecognized?",
+        "MT-Token": token,
+        "MT-Network-Type": "WIFI",
+        "MT-User-Tag": "0",
+        "MT-K": mt_k,
+        "MT-Info": "028e7f96f6369cafe1d105579c5b9377",
+        "MT-APP-Version": mtVersion,
+        "Accept-Language": "zh-Hans-CN;q=1",
+        "MT-Device-ID": deviceId,
+        "MT-Bundle-ID": "com.moutai.mall",
+        "MT-Lng": lng,
+        "MT-Lat": lat,
+        "Content-Type": "application/json",
+        "userId": str(userId),
     }
     requestBody = {
-        "itemInfoList": [{
-            "count": 1,
-            "itemId": str(itemId)
-        }],
+        "itemInfoList": [{"count": 1, "itemId": str(itemId)}],
         "sessionId": sessionId,
         "userId": str(userId),
-        "shopId": str(shopId)
+        "shopId": str(shopId),
     }
-    actParam = aes_cbc_encrypt(json.dumps(requestBody), ENCRYPT_KEY,
-                               ENCRYPT_IV)
-    requestBody['actParam'] = actParam
+    actParam = aes_cbc_encrypt(json.dumps(requestBody), ENCRYPT_KEY, ENCRYPT_IV)
+    requestBody["actParam"] = actParam
     response = requests.post(
-        'https://app.moutai519.com.cn/xhr/front/mall/reservation/add',
+        "https://app.moutai519.com.cn/xhr/front/mall/reservation/add",
         headers=headers,
-        json=requestBody)
-    code = response.json().get('code', 0)
+        json=requestBody,
+    )
+    code = response.json().get("code", 0)
     if code == 2000:
-        result = response.json().get('data', {}).get('successDesc', "未知")
+        result = response.json().get("data", {}).get("successDesc", "未知")
         logging.info(f"🛒 商品ID {itemId} ✅ 预约成功: {result}")
         return result
     else:
         message = response.json().get("message", "未知原因")
-        error_msg = f'🚫 预约失败: 错误码 {code}, 错误信息: {message}'
+        error_msg = f"🚫 预约失败: 错误码 {code}, 错误信息: {message}"
         logging.error(f"🛒 商品ID {itemId} {error_msg}")
         # 如果 message 包含 "请选择另外的门店申购"，则根据店铺缺货模式获取可预约的店铺 ID
         if "请选择另外的门店申购" in message:
             if shop_mode:
                 try:
-                    logging.info(f"--- 🏁 根据店铺缺货模式 {shop_mode} 获取可预约的店铺 ID")
-                    shop_id_new = get_shop_id_by_mode(lat, lng, shop_mode,
-                                                      province, city, itemId)
+                    logging.info(
+                        f"--- 🏁 根据店铺缺货模式 {shop_mode} 获取可预约的店铺 ID"
+                    )
+                    shop_id_new = get_shop_id_by_mode(
+                        lat, lng, shop_mode, province, city, itemId
+                    )
                     if shop_id_new:
                         logging.info(
                             f"--- 🏁 获取可预约的店铺 ID 成功，店铺 ID: {shop_id_new}，重新预约商品"
                         )
                         # 这里特地传 None，在尝试自动预约其他店铺失败时，不再递归调用
-                        reserve_product(itemId, shop_id_new, sessionId, userId,
-                                        token, deviceId, mtVersion, lat, lng,
-                                        None, None, None)
+                        reserve_product(
+                            itemId,
+                            shop_id_new,
+                            sessionId,
+                            userId,
+                            token,
+                            deviceId,
+                            mtVersion,
+                            lat,
+                            lng,
+                            None,
+                            None,
+                            None,
+                        )
                     else:
                         logging.info(
                             f"--- 🚫 获取可预约的店铺 ID 失败，请检查店铺缺货模式 SHOP_ID^SHOP_MODE^PROVINCE^CITY 值 是否正确"
@@ -311,8 +356,8 @@ def get_energy_award(cookie, device_id, mt_version, lat, lng):
         award_result = ""
         if award_rule:
             for item in award_rule:
-                if item and 'goodName' in item and 'count' in item:
-                    award_result += str(item['count'])
+                if item and "goodName" in item and "count" in item:
+                    award_result += str(item["count"])
         else:
             award_result += "未找到耐力值奖励信息"
         logging.info(f"🎁 获得耐力值奖励: {award_result}")
@@ -334,9 +379,9 @@ def get_xmy_applying_reward(cookie, device_id, mt_version, lat, lng):
         message = json_object.get("message")
         raise Exception(f"🚫 查询累计申购奖励失败: {message}")
     # 奖励是否已经领取
-    reward_received = json_object['data']['rewardReceived']
+    reward_received = json_object["data"]["rewardReceived"]
     #  当前申购的天数
-    previous_days = json_object['data']['previousDays'] + 1
+    previous_days = json_object["data"]["previousDays"] + 1
 
     logging.info(f"📅 查询累计申购奖励成功: 累计申购天数: {previous_days} 天")
 
@@ -353,8 +398,9 @@ def get_xmy_applying_reward(cookie, device_id, mt_version, lat, lng):
 
 
 # 领取累计申购奖励
-def receive_xmy_applying_reward(cookie, device_id, mt_version, lat, lng,
-                                cumulativelyApplyingDays):
+def receive_xmy_applying_reward(
+    cookie, device_id, mt_version, lat, lng, cumulativelyApplyingDays
+):
     url = f"{base_url_game}/xmyApplyingReward/receiveCumulativelyApplyingReward"
     headers = generate_headers(device_id, mt_version, cookie, lat, lng)
 
@@ -369,7 +415,7 @@ def receive_xmy_applying_reward(cookie, device_id, mt_version, lat, lng,
         raise Exception(f"领取累计申购奖励失败: {message}")
 
     # 领取的奖励值
-    reward_amount = json_object['data']['rewardAmount']
+    reward_amount = json_object["data"]["rewardAmount"]
     logging.info(
         f"🎁 领取累计申购奖励成功: 📅 累计申购天数: {cumulativelyApplyingDays} 天，奖励小茅运: {reward_amount}"
     )
@@ -379,10 +425,12 @@ def receive_xmy_applying_reward(cookie, device_id, mt_version, lat, lng,
 def get_receive_xmy_applying_reward(cookie, deviceId, mtVersion, lat, lng):
     try:
         cumulativelyApplyingDays = get_xmy_applying_reward(
-            cookie, deviceId, mtVersion, lat, lng)
+            cookie, deviceId, mtVersion, lat, lng
+        )
         if cumulativelyApplyingDays > 0:
-            receive_xmy_applying_reward(cookie, deviceId, mtVersion, lat, lng,
-                                        cumulativelyApplyingDays)
+            receive_xmy_applying_reward(
+                cookie, deviceId, mtVersion, lat, lng, cumulativelyApplyingDays
+            )
     except Exception as e:
         logging.error(f"🚫 查询 & 领取累计申购的小茅运失败: {e}")
 
@@ -400,21 +448,27 @@ def receive_7_day_reward(cookie, device_id, mt_version, lat, lng):
             raise Exception(f"🚫 查询 7 日连续申购失败: {message}")
 
         # 当前连续申购天数
-        current_progress = progress_data['data']['previousProgress'] + 1
+        current_progress = progress_data["data"]["previousProgress"] + 1
         if current_progress < 7:
-            logging.info(f"🚫 当前连续申购天数: {current_progress} 天，不满足 7 天奖励要求")
+            logging.info(
+                f"🚫 当前连续申购天数: {current_progress} 天，不满足 7 天奖励要求"
+            )
             return
 
         # 领取奖励
-        url = f"{base_url_game}/xmyApplyingReward/receive7DaysContinuouslyApplyingReward"
+        url = (
+            f"{base_url_game}/xmyApplyingReward/receive7DaysContinuouslyApplyingReward"
+        )
 
         reward_response = requests.post(url, headers=headers)
         reward_data = json.loads(reward_response.text)
         if reward_data.get("code") != 2000:
             message = reward_data.get("message")
             raise Exception(f"领取失败: {message}")
-        reward_amount = reward_data['data']['rewardAmount']
-        logging.info(f"🎁 领取 7 日连续申购领取小茅运奖励成功，奖励小茅运: {reward_amount}")
+        reward_amount = reward_data["data"]["rewardAmount"]
+        logging.info(
+            f"🎁 领取 7 日连续申购领取小茅运奖励成功，奖励小茅运: {reward_amount}"
+        )
 
     except Exception as e:
         logging.error(f"🚫 7 日连续申购领取小茅运奖励异常: {e}")
@@ -440,11 +494,13 @@ def get_session_id():
 def start(user):
     global session_id
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info(f"🧾 用户：{user['PHONE_NUMBER']}，开始预约商品")
 
     if user["SHOP_ID"] == "AUTO":
-        logging.info(f"🏁 店铺 ID 为 AUTO，根据店铺模式 {user['SHOP_MODE']} 获取店铺 ID")
+        logging.info(
+            f"🏁 店铺 ID 为 AUTO，根据店铺模式 {user['SHOP_MODE']} 获取店铺 ID"
+        )
 
     for product_id in user["PRODUCT_ID_LIST"]:
         shop_id = user["SHOP_ID"]
@@ -452,23 +508,30 @@ def start(user):
         try:
             # 判断 SHOP_ID 是否为 AUTO，如果是，则根据 SHOP_MODE 获取店铺 ID
             if user["SHOP_ID"] == "AUTO":
-                shop_id = get_shop_id_by_mode(user["LAT"], user["LNG"],
-                                              user["SHOP_MODE"], user["PROVINCE"],
-                                              user["CITY"], product_id)
+                shop_id = get_shop_id_by_mode(
+                    user["LAT"],
+                    user["LNG"],
+                    user["SHOP_MODE"],
+                    user["PROVINCE"],
+                    user["CITY"],
+                    product_id,
+                )
                 logging.info(f"🚩 商品ID：{product_id}，获取店铺 ID（{shop_id}）成功")
 
-            reserve_product(itemId=product_id,
-                            shopId=shop_id,
-                            sessionId=session_id,
-                            userId=user["USER_ID"],
-                            token=user["TOKEN"],
-                            deviceId=user["DEVICE_ID"],
-                            mtVersion=user["MT_VERSION"],
-                            lat=user["LAT"],
-                            lng=user["LNG"],
-                            shop_mode=user["SHOP_MODE"],
-                            province=user["PROVINCE"],
-                            city=user["CITY"])
+            reserve_product(
+                itemId=product_id,
+                shopId=shop_id,
+                sessionId=session_id,
+                userId=user["USER_ID"],
+                token=user["TOKEN"],
+                deviceId=user["DEVICE_ID"],
+                mtVersion=user["MT_VERSION"],
+                lat=user["LAT"],
+                lng=user["LNG"],
+                shop_mode=user["SHOP_MODE"],
+                province=user["PROVINCE"],
+                city=user["CITY"],
+            )
         except Exception as e:
             logging.error(f"🚫 预约商品ID {product_id} 失败: {e}")
 
@@ -477,21 +540,23 @@ def start(user):
     # 延迟 3 秒
     time.sleep(3)
     logging.info("🏁 开始获取耐力值奖励")
-    get_energy_award(user["COOKIE"], user["DEVICE_ID"], user["MT_VERSION"],
-                     user["LAT"], user["LNG"])
+    get_energy_award(
+        user["COOKIE"], user["DEVICE_ID"], user["MT_VERSION"], user["LAT"], user["LNG"]
+    )
 
     # 延迟 3 秒
     time.sleep(3)
     logging.info("🏁 查询 & 领取累计申购的小茅运")
-    get_receive_xmy_applying_reward(user["COOKIE"], user["DEVICE_ID"],
-                                    user["MT_VERSION"], user["LAT"],
-                                    user["LNG"])
+    get_receive_xmy_applying_reward(
+        user["COOKIE"], user["DEVICE_ID"], user["MT_VERSION"], user["LAT"], user["LNG"]
+    )
 
     # 延迟 3 秒
     time.sleep(3)
     logging.info("🏁 查询 & 领取 7 日连续申购领取小茅运")
-    receive_7_day_reward(user["COOKIE"], user["DEVICE_ID"], user["MT_VERSION"],
-                         user["LAT"], user["LNG"])
+    receive_7_day_reward(
+        user["COOKIE"], user["DEVICE_ID"], user["MT_VERSION"], user["LAT"], user["LNG"]
+    )
 
 
 # 获取售卖商店信息
@@ -513,14 +578,18 @@ def get_shop_info(province_name, city_name):
     # 第三步：根据provinceName和cityName过滤数据
     result = []
     for _, shop_info in shops_data.items():
-        if shop_info["provinceName"] == province_name and shop_info[
-                "cityName"] == city_name:
-            result.append({
-                "lat": shop_info["lat"],
-                "lng": shop_info["lng"],
-                "name": shop_info["name"],
-                "shopId": shop_info["shopId"]
-            })
+        if (
+            shop_info["provinceName"] == province_name
+            and shop_info["cityName"] == city_name
+        ):
+            result.append(
+                {
+                    "lat": shop_info["lat"],
+                    "lng": shop_info["lng"],
+                    "name": shop_info["name"],
+                    "shopId": shop_info["shopId"],
+                }
+            )
 
     return result
 
@@ -534,8 +603,10 @@ def get_shop_by_product_id(province_name, product_id):
     response = requests.get(api_url)
 
     if 404 == response.status_code:
-        raise Exception(f"🚫 请求的资源未找到（404错误），请求的城市：{province_name}，商品ID：{product_id}，请检查这两个值是否正确。")
-    
+        raise Exception(
+            f"🚫 请求的资源未找到（404错误），请求的城市：{province_name}，商品ID：{product_id}，请检查这两个值是否正确。"
+        )
+
     data = response.json()
 
     if data["code"] != 2000:
@@ -546,10 +617,9 @@ def get_shop_by_product_id(province_name, product_id):
     for shop in data["data"]["shops"]:
         for item in shop["items"]:
             if item["itemId"] == product_id:
-                result.append({
-                    "shopId": shop["shopId"],
-                    "inventory": item["inventory"]
-                })
+                result.append(
+                    {"shopId": shop["shopId"], "inventory": item["inventory"]}
+                )
     return result
 
 
@@ -561,8 +631,10 @@ def haversine(lat1, lng1, lat2, lng2):
     # Haversine 公式
     dlat = lat2 - lat1
     dlng = lng2 - lng1
-    a = math.sin(
-        dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2)**2
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlng / 2) ** 2
+    )
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     # 地球半径（公里）
@@ -573,10 +645,16 @@ def haversine(lat1, lng1, lat2, lng2):
 
 
 # 根据 SHOP_MODE 获取店铺ID
-def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
-                        product_id):
+def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name, product_id):
     # 判断入参是否为空
-    if not lat or not lng or not shop_mode or not province_name or not city_name or not product_id:
+    if (
+        not lat
+        or not lng
+        or not shop_mode
+        or not province_name
+        or not city_name
+        or not product_id
+    ):
         logging.warning("🚫 缺货模式 - 获取店铺ID失败，请检查入参")
         return ""
 
@@ -588,7 +666,9 @@ def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
 
     # 不同的商品 ID 获取到的数量不同，需要重新获取
     shops_by_product_id = get_shop_by_product_id(province_name, product_id)
-    debug_log(f"--- 🏁 获取本省份（{province_name}）指定商品（{product_id}）可以预约的店铺信息 成功")
+    debug_log(
+        f"--- 🏁 获取本省份（{province_name}）指定商品（{product_id}）可以预约的店铺信息 成功"
+    )
 
     # 筛选 省份内所有能预约的店铺 在 用户选的城市店铺 中有哪些
     filter_shops = []
@@ -604,15 +684,18 @@ def get_shop_id_by_mode(lat, lng, shop_mode, province_name, city_name,
 
     # 返回店铺ID，如果 filter_shops 为空，则返回异常
     if 0 == len(filter_shops):
-        raise Exception(f"--- 🚫 没有找到可以预约的店铺，商品ID：{product_id}，请到 i茅台 APP 检查该商品是否可以预约。")
+        raise Exception(
+            f"--- 🚫 没有找到可以预约的店铺，商品ID：{product_id}，请到 i茅台 APP 检查该商品是否可以预约。"
+        )
 
     # 根据 SHOP_MODE 是 NEAREST 或 INVENTORY，获取店铺ID
     if shop_mode == "NEAREST":
         debug_log("--- 🏁 店铺缺货模式：NEAREST（距离最近）")
         # 计算用户位置到店铺的距离，并且按照距离近到远排序，把距离添加到 filter_shops 中
         for shop in filter_shops:
-            distance = haversine(float(lat), float(lng), float(shop["lat"]),
-                                 float(shop["lng"]))
+            distance = haversine(
+                float(lat), float(lng), float(shop["lat"]), float(shop["lng"])
+            )
             shop["distance"] = distance
         filter_shops.sort(key=lambda x: x["distance"])
         if DEBUG:
@@ -648,14 +731,13 @@ if __name__ == "__main__":
             exit()
 
     # 生成时间戳
-    timestamp_today = str(
-        int(time.mktime(datetime.date.today().timetuple())) * 1000)
+    timestamp_today = str(int(time.mktime(datetime.date.today().timetuple())) * 1000)
 
     session_id = get_session_id()
     for user in users:
         start(user)
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info(" ✅ 所有用户预约完成")
 
     log_contents = log_stream.getvalue()

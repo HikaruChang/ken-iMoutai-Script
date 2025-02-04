@@ -3,6 +3,7 @@ import hashlib
 import requests
 import json
 import logging
+
 """
 2、登录，获取 USER_ID、TOKEN、COOKIE 等数据
 
@@ -13,7 +14,7 @@ import logging
 # ------ 填写以下 4 个变量值 --------
 
 # 手机号码，和上一步的手机号码一致
-PHONE_NUMBER = ''
+PHONE_NUMBER = ""
 # 验证码，填写收到的验证码
 CODE = ""
 # 设备 ID，和上一步的设备 ID 一致
@@ -22,16 +23,17 @@ DEVICE_ID = ""
 MT_VERSION = ""
 
 # --------------------
-'''
+"""
 cron: 1 1 1 1 *
 new Env("2_登录")
-'''
+"""
 
 # ***** 以下内容不用动 *****
 
 SALT = "2af72f100c356273d46284f6fd1dfc08"
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 def signature(content, time):
@@ -47,13 +49,13 @@ def login(mobile, code, device_id, mt_version):
         "vCode": code,
         "md5": signature(mobile + code, cur_time),
         "timestamp": str(cur_time),
-        "MT-APP-Version": mt_version
+        "MT-APP-Version": mt_version,
     }
     headers = {
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
     url = "https://app.moutai519.com.cn/xhr/front/user/register/login"
     response = requests.post(url, headers=headers, data=json.dumps(data))
@@ -67,8 +69,8 @@ def login(mobile, code, device_id, mt_version):
         user_data = json_response.get("data", {})
         filtered_data = {
             k: v
-            for k, v in user_data.items() if k not in
-            ["idType", "verifyStatus", "idCode", "birthday", "userTag"]
+            for k, v in user_data.items()
+            if k not in ["idType", "verifyStatus", "idCode", "birthday", "userTag"]
         }
         return filtered_data
     else:

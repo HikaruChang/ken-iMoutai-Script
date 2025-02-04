@@ -50,10 +50,10 @@ import re
 from notify import send
 
 # 每日 18:05 定时检查并通知
-'''
+"""
 cron: 05 18 * * *
 new Env("99_检查 TOKEN、COOKIE 有效期")
-'''
+"""
 
 # 创建 StringIO 对象
 log_stream = io.StringIO()
@@ -65,7 +65,8 @@ logger.setLevel(logging.INFO)
 # 创建控制台 Handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(
-    logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+)
 
 # 创建 StringIO Handler
 stream_handler = logging.StreamHandler(log_stream)
@@ -79,25 +80,36 @@ logger.addHandler(stream_handler)
 DEBUG = False
 
 # 读取 KEN_IMAOTAI_ENV 环境变量
-KEN_IMAOTAI_ENV = os.getenv('KEN_IMAOTAI_ENV', '')
+KEN_IMAOTAI_ENV = os.getenv("KEN_IMAOTAI_ENV", "")
 
 # 解析 KEN_IMAOTAI_ENV 环境变量并保存到 user 列表
 users = []
 if KEN_IMAOTAI_ENV:
-    env_list = KEN_IMAOTAI_ENV.split('&')
+    env_list = KEN_IMAOTAI_ENV.split("&")
     for env in env_list:
         try:
             # 使用 re.split() 分割字符串，支持 '#' 和 '$'
-            split_values = re.split(r'[#$]', env)
+            split_values = re.split(r"[#$]", env)
 
-            PHONE_NUMBER, USER_ID, DEVICE_ID, MT_VERSION, PRODUCT_ID_LIST, SHOP_INFO, LAT, LNG, TOKEN, COOKIE = split_values
+            (
+                PHONE_NUMBER,
+                USER_ID,
+                DEVICE_ID,
+                MT_VERSION,
+                PRODUCT_ID_LIST,
+                SHOP_INFO,
+                LAT,
+                LNG,
+                TOKEN,
+                COOKIE,
+            ) = split_values
 
-            SHOP_MODE = ''
-            PROVINCE = ''
-            CITY = ''
+            SHOP_MODE = ""
+            PROVINCE = ""
+            CITY = ""
 
-            if '^' in SHOP_INFO:
-                parts = SHOP_INFO.split('^')
+            if "^" in SHOP_INFO:
+                parts = SHOP_INFO.split("^")
                 if len(parts) > 1:
                     # 检测 parts 长度是否为 4，否则抛出异常
                     if len(parts) != 4:
@@ -106,7 +118,7 @@ if KEN_IMAOTAI_ENV:
                         )
                     SHOP_ID, SHOP_MODE, PROVINCE, CITY = parts
                     # 检测 SHOP_MODE 是否为 NEAREST 或 INVENTORY
-                    if SHOP_MODE not in ['NEAREST', 'INVENTORY', '']:
+                    if SHOP_MODE not in ["NEAREST", "INVENTORY", ""]:
                         raise Exception(
                             "🚫 店铺缺货模式值错误，请检查 SHOP_MODE 值是否为 NEAREST（<默认> 距离最近） 或 INVENTORY（库存最多） 或 空字符串（不选择其他店铺）"
                         )
@@ -123,37 +135,47 @@ if KEN_IMAOTAI_ENV:
                 SHOP_ID = SHOP_INFO
 
             # 如果 SHOP_ID 为 AUTO，检查 SHOP_MODE 是否为空
-            if SHOP_ID == 'AUTO' and not SHOP_MODE:
+            if SHOP_ID == "AUTO" and not SHOP_MODE:
                 raise Exception(
                     "🚫 店铺缺货模式值错误，SHOP_ID 值为 AUTO 时，需设置 SHOP_MODE、PROVINCE 和 CITY 值 "
                 )
 
             user = {
-                'PHONE_NUMBER': PHONE_NUMBER.strip(),
-                'USER_ID': USER_ID.strip(),
-                'DEVICE_ID': DEVICE_ID.strip(),
-                'MT_VERSION': MT_VERSION.strip(),
-                'PRODUCT_ID_LIST': ast.literal_eval(PRODUCT_ID_LIST.strip()),
-                'SHOP_ID': SHOP_ID.strip(),
-                'SHOP_MODE': SHOP_MODE.strip(),
-                'PROVINCE': PROVINCE.strip(),
-                'CITY': CITY.strip(),
-                'LAT': LAT.strip(),
-                'LNG': LNG.strip(),
-                'TOKEN': TOKEN.strip(),
-                'COOKIE': COOKIE.strip()
+                "PHONE_NUMBER": PHONE_NUMBER.strip(),
+                "USER_ID": USER_ID.strip(),
+                "DEVICE_ID": DEVICE_ID.strip(),
+                "MT_VERSION": MT_VERSION.strip(),
+                "PRODUCT_ID_LIST": ast.literal_eval(PRODUCT_ID_LIST.strip()),
+                "SHOP_ID": SHOP_ID.strip(),
+                "SHOP_MODE": SHOP_MODE.strip(),
+                "PROVINCE": PROVINCE.strip(),
+                "CITY": CITY.strip(),
+                "LAT": LAT.strip(),
+                "LNG": LNG.strip(),
+                "TOKEN": TOKEN.strip(),
+                "COOKIE": COOKIE.strip(),
             }
             # 检查字段是否完整且有值，不检查 SHOP_MODE、PROVINCE、CITY 字段（PROVINCE 和 CITY 用于 SHOP_MODE 里，而 SHOP_MODE 可选）
             required_fields = [
-                'PHONE_NUMBER', 'USER_ID', 'DEVICE_ID', 'MT_VERSION',
-                'PRODUCT_ID_LIST', 'SHOP_ID', 'LAT', 'LNG', 'TOKEN', 'COOKIE'
+                "PHONE_NUMBER",
+                "USER_ID",
+                "DEVICE_ID",
+                "MT_VERSION",
+                "PRODUCT_ID_LIST",
+                "SHOP_ID",
+                "LAT",
+                "LNG",
+                "TOKEN",
+                "COOKIE",
             ]
             if all(user.get(field) for field in required_fields):
                 # 判断 PRODUCT_ID_LIST 长度是否大于 0
-                if len(user['PRODUCT_ID_LIST']) > 0:
+                if len(user["PRODUCT_ID_LIST"]) > 0:
                     users.append(user)
                 else:
-                    raise Exception("🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试")
+                    raise Exception(
+                        "🚫 预约商品列表 - PRODUCT_ID_LIST 值为空，请添加后重试"
+                    )
             else:
                 logging.info(f"🚫 用户信息不完整: {user}")
         except Exception as e:
@@ -181,7 +203,7 @@ def generate_headers(device_id, mt_version, cookie, lat=None, lng=None):
         "MT-Device-ID": device_id,
         "MT-APP-Version": mt_version,
         "User-Agent": "iOS;16.3;Apple;?unrecognized?",
-        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};"
+        "Cookie": f"MT-Token-Wap={cookie};MT-Device-ID-Wap={device_id};",
     }
     if lat and lng:
         headers["MT-Lat"] = lat
@@ -201,12 +223,13 @@ def check_jwt(jwt_value):
         if exp_timestamp:
             # 转换为日期
             exp_date = datetime.datetime.fromtimestamp(
-                exp_timestamp, tz=datetime.timezone.utc)
+                exp_timestamp, tz=datetime.timezone.utc
+            )
 
             # 获取当前时间
             current_date = datetime.datetime.now(datetime.timezone.utc)
 
-            exp_date_str = exp_date.strftime('%Y-%m-%d %H:%M:%S')
+            exp_date_str = exp_date.strftime("%Y-%m-%d %H:%M:%S")
 
             # 判断是否过期
             if current_date > exp_date:
@@ -225,8 +248,7 @@ def check_jwt(jwt_value):
 def check_api(cookie, device_id, mt_version, lat, lng):
     global DEBUG
     try:
-        timestamp = str(
-            int(time.mktime(datetime.date.today().timetuple())) * 1000)
+        timestamp = str(int(time.mktime(datetime.date.today().timetuple())) * 1000)
         url = f"https://h5.moutai519.com.cn/game/userinfo?__timestamp={timestamp}&"
         headers = generate_headers(device_id, mt_version, cookie, lat, lng)
 
@@ -241,32 +263,39 @@ def check_api(cookie, device_id, mt_version, lat, lng):
         logging.info("✅ 测试通过")
     except Exception as e:
         logging.error(f"🚫 测试不通过: {e}")
-        logging.error(f"⚠️ TOKEN、COOKIE 值真的失效啦！建议及时更新！否则无法正常预约和旅行咯！")
+        logging.error(
+            f"⚠️ TOKEN、COOKIE 值真的失效啦！建议及时更新！否则无法正常预约和旅行咯！"
+        )
 
 
 if __name__ == "__main__":
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info(
-        '💬 TOKEN 有效期时间不一定准确，一般上下浮动 6 小时，以真实 API 连接的结果为准。同时建议临近有效期时手动更新 TOKEN、COOKIE，不用等到过期再去更新。'
+        "💬 TOKEN 有效期时间不一定准确，一般上下浮动 6 小时，以真实 API 连接的结果为准。同时建议临近有效期时手动更新 TOKEN、COOKIE，不用等到过期再去更新。"
     )
 
     for user in users:
         try:
-            logging.info('--------------------------')
+            logging.info("--------------------------")
             logging.info(f"📞 用户 {user['PHONE_NUMBER']} 开始检查")
             logging.info(f"🔍 开始检查 TOKEN 有效期")
-            check_jwt(user['TOKEN'])
+            check_jwt(user["TOKEN"])
 
             logging.info(f"🔍 开始测试真实 API 连接")
-            check_api(user['COOKIE'], user['DEVICE_ID'], user['MT_VERSION'],
-                      user['LAT'], user['LNG'])
+            check_api(
+                user["COOKIE"],
+                user["DEVICE_ID"],
+                user["MT_VERSION"],
+                user["LAT"],
+                user["LNG"],
+            )
         except Exception as e:
             logging.error(
                 f"🚫 用户 {user['PHONE_NUMBER']} 检查异常: {e}，请手动执行 4、5 脚本，检查 TOKEN、COOKIE 是否过期"
             )
 
-    logging.info('--------------------------')
+    logging.info("--------------------------")
     logging.info("✅ 所有用户检查完成")
 
     log_contents = log_stream.getvalue()
